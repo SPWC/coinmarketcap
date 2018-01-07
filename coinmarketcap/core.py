@@ -4,12 +4,13 @@
 import json
 import requests
 import requests_cache
+from pprint import pprint
 
 class Market(object):
 
 	_session = None
 	__DEFAULT_BASE_URL = 'https://api.coinmarketcap.com/v1/'
-	__DEFAULT_TIMEOUT = 120
+	__DEFAULT_TIMEOUT = 5
 
 	def __init__(self, base_url = __DEFAULT_BASE_URL, request_timeout = __DEFAULT_TIMEOUT):
 		self.base_url = base_url
@@ -20,8 +21,8 @@ class Market(object):
 		if not self._session:
 			self._session = requests_cache.core.CachedSession(cache_name='coinmarketcap_cache', backend='sqlite', expire_after=120)
 			self._session.headers.update({'Content-Type': 'application/json'})
-			self._session.headers.update({'User-agent': 'coinmarketcap - python wrapper \
-		around coinmarketcap.com (github.com/mrsmn/coinmarketcap-api)'})
+			self._session.headers.update(
+				{'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'})
 		return self._session
 
 	def __request(self, endpoint, params):
@@ -66,3 +67,10 @@ class Market(object):
 		params.update(kwargs)
 		response = self.__request('global/', params)
 		return response
+
+if __name__ == "__main__":
+	coinmarketcap = Market()
+	# for i in range (10):
+	pprint(coinmarketcap.ticker("", limit=3, convert='EUR'))
+		# pprint(coinmarketcap.stats())
+		# pprint(coinmarketcap.ticker('', limit=3, convert='USD'))

@@ -5,12 +5,14 @@ import json
 import requests
 import requests_cache
 from pprint import pprint
+import random
+from retrying import retry
 
 class Market(object):
 
 	_session = None
 	__DEFAULT_BASE_URL = 'https://api.coinmarketcap.com/v1/'
-	__DEFAULT_TIMEOUT = 5
+	__DEFAULT_TIMEOUT = 3
 
 	def __init__(self, base_url = __DEFAULT_BASE_URL, request_timeout = __DEFAULT_TIMEOUT):
 		self.base_url = base_url
@@ -25,19 +27,25 @@ class Market(object):
 				{'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'})
 		return self._session
 
+	@retry(stop_max_attempt_number=7)
 	def __request(self, endpoint, params):
-		response_object = self.session.get(self.base_url + endpoint, params = params, timeout = self.request_timeout)
-
-		if response_object.status_code != 200:
-			raise Exception('An error occured, please try again.')
 		try:
+			response_object = self.session.get(self.base_url + endpoint, params = params, timeout = self.request_timeout)
+
+			if response_object.status_code != 200:
+				raise Exception('An error occured, please try again.')
+			
 			response = json.loads(response_object.text)
 			if isinstance(response, list):
 				response = [dict(item, **{u'cached':response_object.from_cache}) for item in response]
 			if isinstance(response, dict):
 				response[u'cached'] = response_object.from_cache
+		except requests.exceptions.ConnectionError as e:
+			print('\na connection error occured, please try again.'+str(e)+'\n')
+		except requests.exceptions.Timeout as e:
+			print(f'\na timeout error occured, please try again.{e}\n')
 		except requests.exceptions.RequestException as e:
-			return e
+			print('\na request error occured, please try again.\n')
 
 		return response
 
@@ -71,6 +79,6 @@ class Market(object):
 if __name__ == "__main__":
 	coinmarketcap = Market()
 	# for i in range (10):
-	pprint(coinmarketcap.ticker("", limit=3, convert='EUR'))
+	pprint(coinmarketcap.ticker("", limit=1, convert='EUR'))
 		# pprint(coinmarketcap.stats())
 		# pprint(coinmarketcap.ticker('', limit=3, convert='USD'))

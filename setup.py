@@ -5,7 +5,7 @@ from distutils.core import setup
 
 setup(
     name = 'coinmarketcap',
-    version = '4.1.1',
+    version = '1.1',
     url = 'https://github.com/SPWC/coinmarketcap',
     download_url = 'https://github.com/SPWC/coinmarketcap/archive/master.zip',
     author = 'Lavell Lartey <whaleofcoinbase@gmail.com>',
